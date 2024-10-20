@@ -1,0 +1,15 @@
+https://docs.arduino.cc/software/ide-v2/tutorials/getting-started/ide-v2-downloading-and-installing/
+Usar bootloader viejo!
+https://www.taloselectronics.com/blogs/tutoriales/como-mandar-sms-desde-arduino-y-sim800l
+Comandos AT: https://www.developershome.com/sms/atCommandsIntro.asp
+Detalle de uso del AIM800L: https://descubrearduino.com/sim800l-gsm/
+Algunos links más por acá: https://naylampmechatronics.com/inalambrico/115-modulo-gsm-sim800l-2g.html
+Hay que usar 115200: https://forum.arduino.cc/t/problem-with-sim800l-module-and-arduino-nano/1232787/3
+Arduino con batería de LIPO: https://bikepixels.com/2019/11/10/anadir-una-bateria-lipo-en-proyectos-con-arduino/?lang=es
+
+Circuito isolation pag. 32: https://www.makerhero.com/img/files/download/Datasheet_SIM800L.pdf
+
+2N3904 -> NPN. Viendo la parte plana con pines hacia abajo -> EBC
+BC548 -> NPN. Viendo la parte plana con pines hacia abajo -> BCE
+
+TEMT6000: https://hetpro-store.com/TUTORIALES/sensor-luz-ambiental-temt6000/

@@ -16,7 +16,7 @@ SoftwareSerial MOD_SIM800L(Gsm_tx, Gsm_rx);
 String Numero_cliente = "91165369244";
 // SoftwareSerial SIM800L(2, 3);   // Definimos los pines RX y TX del Arduino conectados al Bluetooth
 int loop_n = 0;
-int DELAY_LOOP = 100;
+int DELAY_LOOP = 10;
 
 // AM2302
 #include <AM2302-Sensor.h>
@@ -29,6 +29,10 @@ int ledPin = 12;                // choose the pin for the LED
 int inputPin = 5;               // choose the input pin (for PIR sensor)
 int pirState = LOW;             // we start, assuming no motion detected
 int val = 0;                    // variable for reading the pin status
+
+// TEMT6000
+int pinSensor = 4;
+int light_valor = 0;
 
 // Moncho
 String activated = "yes";
@@ -94,8 +98,10 @@ void setup()
     }
   }
 
+  // AutoBauding -> 1200, 2400, 4800, 9600, 19200, 38400, 57600
   // MOD_SIM800L.begin(115200);
-  MOD_SIM800L.begin(57600);
+  // MOD_SIM800L.begin(57600);
+  MOD_SIM800L.begin(38400);
   // Enviar_msj(Numero_cliente, "Inicializacion completa");
   Serial.println("Initializing...");
   delay(1000);
@@ -138,7 +144,7 @@ void Enviar_msj(String numero, String msj)
 }
 
 void get_am2302(){
-  if (am2302_tick == int(5000 / DELAY_LOOP)){
+  if (am2302_tick == int(100 / DELAY_LOOP)){
     // This enters each 5s
     am2302_tick = 0;
     auto status = am2302.read();
@@ -154,6 +160,11 @@ void get_am2302(){
     temperature_status += "Humidity: ";
     // Serial.println(am2302.get_Humidity());
     temperature_status += am2302.get_Humidity();
+    temperature_status += "\r\n";
+
+    // Light sensor
+    light_valor = analogRead(pinSensor); 
+    temperature_status += "Light: " + (String) light_valor;
   }
   else {
     am2302_tick++;
@@ -270,7 +281,7 @@ void analyse_msj(String msj){
 void loop() {
   // put your main code here, to run repeatedly:
   
-  if (loop_n % int(1000 / DELAY_LOOP) == 0){
+  if (loop_n % int(100 / DELAY_LOOP) == 0){
     // This enters each 1s
     // Serial.print("Loop " + String(loop_n) + "\n");
     digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));  // turn the LED on (HIGH is the voltage level)

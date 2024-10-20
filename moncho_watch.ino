@@ -9,9 +9,14 @@
 */
 
 #include <SoftwareSerial.h>   // Incluimos la librería  SoftwareSerial
-SoftwareSerial SIM800L(2, 3);   // Definimos los pines RX y TX del Arduino conectados al Bluetooth
+#define Gsm_tx 2
+#define Gsm_rx 3
+
+SoftwareSerial MOD_SIM800L(Gsm_tx, Gsm_rx);
+String Numero_cliente = "91165369244";
+// SoftwareSerial SIM800L(2, 3);   // Definimos los pines RX y TX del Arduino conectados al Bluetooth
 int loop_n = 0;
-int DELAY_LOOP = 50;
+int DELAY_LOOP = 100;
 
 // AM2302
 #include <AM2302-Sensor.h>
@@ -25,12 +30,51 @@ int inputPin = 5;               // choose the input pin (for PIR sensor)
 int pirState = LOW;             // we start, assuming no motion detected
 int val = 0;                    // variable for reading the pin status
 
+// Moncho
+String activated = "yes";
+
+// Strings
+String temperature_status = "";
+String ACTIVATE = "hola";
+String DEACTIVATE = "chau";
+String TEMPERATURE = "clima";
+String STATUS = "moncho";
+String COMMANDS = "##";
+
+void select_answer(String message) {
+  String answer = "";
+
+  if(message.indexOf(ACTIVATE) >= 0){
+    activated = "yes";
+    answer = "Fuerte y claro";
+  }
+  if(message.indexOf(DEACTIVATE) >= 0){
+    activated = "no";
+    answer = "Te mando un besito!";
+  }
+  if(message.indexOf(TEMPERATURE) >= 0)
+    answer = temperature_status;
+  if(message.indexOf(STATUS) >= 0){
+    answer = "Status:\r\n";
+    answer += "Activated: " + activated + "\r\n";
+    answer += temperature_status + "\r\n";
+  }
+  if(message.indexOf(COMMANDS) >= 0){
+    answer = "Activate: " + ACTIVATE + "\r\n";
+    answer += "Deactivate: " + DEACTIVATE + "\r\n";
+    answer += "Temperature: " + TEMPERATURE + "\r\n";
+    answer += "Status: " + STATUS + "\r\n";
+  }
+  if(answer != "")
+    Enviar_msj(Numero_cliente, answer);
+}
+
 void setup()
 {
   pinMode(LED_BUILTIN, OUTPUT); // D13
   digitalWrite(LED_BUILTIN, LOW);  // turn the LED on (HIGH is the voltage level)
 
-  SIM800L.begin(115200);       // Inicializamos el puerto serie BT (Para Modo AT 2)
+  // SIM800L.begin(115200);       // Inicializamos el puerto serie BT (Para Modo AT 2)
   Serial.begin(9600);   // Inicializamos  el puerto serie
   Serial.print("Sketch:   ");   Serial.println(__FILE__);
 
@@ -45,10 +89,52 @@ void setup()
   }
   else {
     while (true) {
-    Serial.println("Error: sensor check. => Please check sensor connection!");
-    delay(10000);
+      Serial.println("Error: sensor check. => Please check sensor connection!");
+      delay(10000);
     }
   }
+
+  // MOD_SIM800L.begin(115200);
+  MOD_SIM800L.begin(57600);
+  // Enviar_msj(Numero_cliente, "Inicializacion completa");
+  Serial.println("Initializing...");
+  delay(1000);
+
+  MOD_SIM800L.println("AT"); //Once the handshake test is successful, it will back to OK
+  updateSerial();
+  MOD_SIM800L.println("AT+CSQ"); //Signal quality test, value range is 0-31 , 31 is the best
+  updateSerial();
+  MOD_SIM800L.println("AT+CCID"); //Read SIM information to confirm whether the SIM is plugged
+  updateSerial();
+  MOD_SIM800L.println("AT+CREG?"); //Check whether it has registered in the network
+  updateSerial();
+  MOD_SIM800L.println("AT+CMGF=1"); // Configuring TEXT mode
+  updateSerial();
+  MOD_SIM800L.println("AT+CNMI=1,2,0,0,0"); // Decides how newly arrived SMS messages should be handled
+}
+
+void Enviar_msj(String numero, String msj)
+{
+  //Se establece el formato de SMS en ASCII
+  String config_numero = "AT+CMGS=\"+54" + numero + "\"\r\n";
+  Serial.println(config_numero);
+
+  //configurar modulo como modo SMS
+  MOD_SIM800L.write("AT+CMGF=1\r\n");
+  delay(1000);
+  
+  //Enviar comando para un nuevos SMS al numero establecido
+  MOD_SIM800L.print(config_numero);
+  delay(1000);
+
+  //Enviar contenido del SMS
+  MOD_SIM800L.print(msj);
+  delay(1000);
+
+  //Enviar Ctrl+Z
+  MOD_SIM800L.write((char)26);
+  delay(1000);
+  Serial.println("Mensaje enviado");
 }
 
 void get_am2302(){
@@ -56,14 +142,18 @@ void get_am2302(){
     // This enters each 5s
     am2302_tick = 0;
     auto status = am2302.read();
-    Serial.print("\n\nstatus of sensor read(): ");
-    Serial.println(status);
+    // Serial.print("\n\nstatus of sensor read(): ");
+    // Serial.println(status);
 
-    Serial.print("Temperature: ");
-    Serial.println(am2302.get_Temperature());
-
-    Serial.print("Humidity:    ");
-    Serial.println(am2302.get_Humidity());
+    // Serial.print("Temperature: ");
+    temperature_status = "Temperature: ";
+    // Serial.println(am2302.get_Temperature());
+    temperature_status += am2302.get_Temperature();
+    temperature_status += "\r\n";
+    // Serial.print("Humidity:    ");
+    temperature_status += "Humidity: ";
+    // Serial.println(am2302.get_Humidity());
+    temperature_status += am2302.get_Humidity();
   }
   else {
     am2302_tick++;
@@ -80,6 +170,7 @@ void check_sr501(){
     if (pirState == LOW) 
 	{
       Serial.println("Motion detected!");	// print on output change
+      Enviar_msj(Numero_cliente, "raaari");
       pirState = HIGH;
     }
   } 
@@ -95,18 +186,101 @@ void check_sr501(){
   }
 }
 
+void updateSerial()
+{
+  delay(500);
+  while (Serial.available()){
+    MOD_SIM800L.write(Serial.read());//Forward what Serial received to Software Serial Port
+  }
+  String whole_msg = "";
+  while(MOD_SIM800L.available()){
+    char msj = MOD_SIM800L.read();
+    // Serial.write(MOD_SIM800L.read());//Forward what Software Serial received to Serial Port
+    Serial.write(msj);//Forward what Software Serial received to Serial Port
+    // if(msj != '\n')
+    //   if(msj != '\r')
+    whole_msg += msj;
+  }
+  // analyse_msj(String(msj));
+  if(whole_msg != "")
+    analyse_msj(whole_msg);
+}
+
+void analyse_msj(String msj){
+  int length = msj.length();
+  Serial.print("LEN: "); Serial.println(length);
+  if(length > 40){
+    int field = 0;
+    /*from: https://descubrearduino.com/sim800l-gsm/
+    Su respuesta comienza con +CMT: Todos los campos de la respuesta están separados 
+    por comas y el primer campo es el número de teléfono. El segundo campo es el nombre 
+    de la persona que envía el SMS. El tercer campo es una marca de tiempo mientras que 
+    el cuarto campo es el mensaje real.*/
+    String header = "";
+    String number = "";
+    String name = "";
+    String date = "";
+    String time = "";
+    String message = "";
+    String separators = ", \r\n";
+    char last = 'X';
+    bool reading_msg = false;
+
+    for(int i=0; i < length; i++){
+      if(separators.indexOf(msj[i]) >= 0 & !reading_msg & header != ""){
+        if(!(separators.indexOf(last) >= 0))
+          field++;
+      }
+      else{
+        if(field == 0){
+          header += msj[i];
+        } else
+        if(field == 1){
+          number += msj[i];
+        } else
+        if(field == 2){
+          name += msj[i];
+        } else
+        if(field == 3){
+          date += msj[i];
+        } else
+        if(field == 4){
+          time += msj[i];
+        } else
+        if(field == 5){
+          reading_msg = true;
+          message += msj[i];
+        } 
+      }
+      last = msj[i];
+    }
+    Serial.print("header: "); Serial.println(header);
+    Serial.print("number: "); Serial.println(number);
+    Serial.print("name: "); Serial.println(name);
+    Serial.print("date: "); Serial.println(date);
+    Serial.print("time: "); Serial.println(time);
+    Serial.print("message: "); Serial.println(message);
+    if(header.indexOf("CMT" >= 0)){
+      Serial.println("es CMT!");
+      select_answer(message);
+    }
+  }
+}
+
 void loop() {
   // put your main code here, to run repeatedly:
   
   if (loop_n % int(1000 / DELAY_LOOP) == 0){
     // This enters each 1s
-    Serial.print("Loop " + String(loop_n) + "\n");
+    // Serial.print("Loop " + String(loop_n) + "\n");
     digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));  // turn the LED on (HIGH is the voltage level)
   }
   loop_n++;
 
   get_am2302();
-  check_sr501();
+  // check_sr501();
+
+  updateSerial();
 
   delay(DELAY_LOOP);
 }

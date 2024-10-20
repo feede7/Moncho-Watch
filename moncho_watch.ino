@@ -35,13 +35,14 @@ int pinSensor = 4;
 int light_valor = 0;
 
 // Moncho
-String activated = "yes";
+String activated_yes = "yes";
+String activated = activated_yes;
 
 // Strings
 String temperature_status = "";
-String ACTIVATE = "hola";
-String DEACTIVATE = "chau";
-String TEMPERATURE = "clima";
+String ACTIVATE = "morcilla";
+String DEACTIVATE = "chinchu";
+String TEMPERATURE = "tapolar";
 String STATUS = "moncho";
 String COMMANDS = "##";
 
@@ -144,7 +145,7 @@ void Enviar_msj(String numero, String msj)
 }
 
 void get_am2302(){
-  if (am2302_tick == int(100 / DELAY_LOOP)){
+  if (am2302_tick == int(1000 / DELAY_LOOP)){
     // This enters each 5s
     am2302_tick = 0;
     auto status = am2302.read();
@@ -181,7 +182,8 @@ void check_sr501(){
     if (pirState == LOW) 
 	{
       Serial.println("Motion detected!");	// print on output change
-      Enviar_msj(Numero_cliente, "raaari");
+      if (activated == "yes")
+        Enviar_msj(Numero_cliente, "raaari");
       pirState = HIGH;
     }
   } 
@@ -281,7 +283,7 @@ void analyse_msj(String msj){
 void loop() {
   // put your main code here, to run repeatedly:
   
-  if (loop_n % int(100 / DELAY_LOOP) == 0){
+  if (loop_n % int(1000 / DELAY_LOOP) == 0){
     // This enters each 1s
     // Serial.print("Loop " + String(loop_n) + "\n");
     digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));  // turn the LED on (HIGH is the voltage level)
@@ -289,7 +291,7 @@ void loop() {
   loop_n++;
 
   get_am2302();
-  // check_sr501();
+  check_sr501();
 
   updateSerial();
 

@@ -35,7 +35,8 @@ int pinSensor = 4;
 int light_valor = 0;
 
 // Moncho
-String activated_yes = "yes";
+// String activated_yes = "yes";
+String activated_yes = "no";
 String activated = activated_yes;
 
 // Strings
@@ -46,7 +47,7 @@ String TEMPERATURE = "tapolar";
 String STATUS = "moncho";
 String COMMANDS = "##";
 
-void select_answer(String message) {
+void select_answer(String number, String message) {
   String answer = "";
 
   if(message.indexOf(ACTIVATE) >= 0){
@@ -72,6 +73,12 @@ void select_answer(String message) {
   }
   if(answer != "")
     Enviar_msj(Numero_cliente, answer);
+  
+  String a_time = "";
+  a_time += "es CMT!\r\n";
+  a_time += number + "\r\n";
+  a_time += message;
+  Enviar_msj(Numero_cliente, a_time);
 }
 
 void setup()
@@ -149,17 +156,11 @@ void get_am2302(){
     // This enters each 5s
     am2302_tick = 0;
     auto status = am2302.read();
-    // Serial.print("\n\nstatus of sensor read(): ");
-    // Serial.println(status);
 
-    // Serial.print("Temperature: ");
     temperature_status = "Temperature: ";
-    // Serial.println(am2302.get_Temperature());
     temperature_status += am2302.get_Temperature();
     temperature_status += "\r\n";
-    // Serial.print("Humidity:    ");
     temperature_status += "Humidity: ";
-    // Serial.println(am2302.get_Humidity());
     temperature_status += am2302.get_Humidity();
     temperature_status += "\r\n";
 
@@ -208,13 +209,9 @@ void updateSerial()
   String whole_msg = "";
   while(MOD_SIM800L.available()){
     char msj = MOD_SIM800L.read();
-    // Serial.write(MOD_SIM800L.read());//Forward what Software Serial received to Serial Port
     Serial.write(msj);//Forward what Software Serial received to Serial Port
-    // if(msj != '\n')
-    //   if(msj != '\r')
     whole_msg += msj;
   }
-  // analyse_msj(String(msj));
   if(whole_msg != "")
     analyse_msj(whole_msg);
 }
@@ -274,8 +271,10 @@ void analyse_msj(String msj){
     Serial.print("time: "); Serial.println(time);
     Serial.print("message: "); Serial.println(message);
     if(header.indexOf("CMT" >= 0)){
-      Serial.println("es CMT!");
-      select_answer(message);
+      if(number != "OK"){
+        Serial.println("es CMT!");
+        select_answer(number, message);
+      }
     }
   }
 }
@@ -285,7 +284,6 @@ void loop() {
   
   if (loop_n % int(1000 / DELAY_LOOP) == 0){
     // This enters each 1s
-    // Serial.print("Loop " + String(loop_n) + "\n");
     digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));  // turn the LED on (HIGH is the voltage level)
   }
   loop_n++;

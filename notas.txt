@@ -13,3 +13,7 @@ Circuito isolation pag. 32: https://www.makerhero.com/img/files/download/Datashe
 BC548 -> NPN. Viendo la parte plana con pines hacia abajo -> BCE
 
 TEMT6000: https://hetpro-store.com/TUTORIALES/sensor-luz-ambiental-temt6000/
+
+Charla con Gemini de carga de bootloader y Arduino as ISP -> https://gemini.google.com/app/3f0f3c318d94135a?hl=es
+Repo de MiniCore -> https://github.com/MCUdude/MiniCore?tab=readme-ov-file
+Video con dibujo de conexión para programar con otro arduino -> https://youtu.be/MtT9jsOWmu4?si=Z_Ut77tIFzKZFK6U&t=21

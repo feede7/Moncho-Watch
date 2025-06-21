@@ -9,8 +9,8 @@
 */
 
 #include <SoftwareSerial.h>   // Incluimos la librería  SoftwareSerial
-#define Gsm_tx 8
-#define Gsm_rx 9
+#define Gsm_tx 8  // Al TXD del SIM800L
+#define Gsm_rx 9  // Al RXD del SIM800L
 
 SoftwareSerial MOD_SIM800L(Gsm_tx, Gsm_rx);
 String Numero_cliente = "91165369244";
@@ -26,7 +26,7 @@ int am2302_tick = 0;
 
 // HC-SR501
 int ledPin = 12;                // choose the pin for the LED
-int inputPin = 5;               // choose the input pin (for PIR sensor)
+int inputPin = 7;               // choose the input pin (for PIR sensor)
 int pirState = LOW;             // we start, assuming no motion detected
 int val = 0;                    // variable for reading the pin status
 
@@ -58,17 +58,19 @@ void select_answer(String number, String message) {
     activated = "no";
     answer = "Te mando un besito!";
   }
-  if(message.indexOf(TEMPERATURE) >= 0)
+  if(message.indexOf(TEMPERATURE) >= 0){
     answer = temperature_status;
+    answer = "Acordate que no tengo sensores!";
+  }
   if(message.indexOf(STATUS) >= 0){
     answer = "Status:\r\n";
     answer += "Activated: " + activated + "\r\n";
-    answer += temperature_status + "\r\n";
+    // answer += temperature_status + "\r\n";
   }
   if(message.indexOf(COMMANDS) >= 0){
     answer = "Activate: " + ACTIVATE + "\r\n";
     answer += "Deactivate: " + DEACTIVATE + "\r\n";
-    answer += "Temperature: " + TEMPERATURE + "\r\n";
+    // answer += "Temperature: " + TEMPERATURE + "\r\n";
     answer += "Status: " + STATUS + "\r\n";
   }
   if(answer != "")
@@ -93,19 +95,6 @@ void setup()
   // When power is supplied to sensor, don't send any instruction to the sensor within one second to pass unstable status
   delay(1000);
 
-  // // set pin and check for sensor
-  // if (am2302.begin()) {
-  //   // this delay is needed to receive valid data,
-  //   // when the loop directly read again
-  //   delay(3000);
-  // }
-  // else {
-  //   while (true) {
-  //     Serial.println("Error: sensor check. => Please check sensor connection!");
-  //     delay(10000);
-  //   }
-  // }
-
   // AutoBauding -> 1200, 2400, 4800, 9600, 19200, 38400, 57600
   // MOD_SIM800L.begin(115200);
   MOD_SIM800L.begin(57600);
@@ -115,16 +104,22 @@ void setup()
   delay(1000);
 
   MOD_SIM800L.println("AT"); //Once the handshake test is successful, it will back to OK
+  Serial.println("AT");
   updateSerial();
   MOD_SIM800L.println("AT+CSQ"); //Signal quality test, value range is 0-31 , 31 is the best
+  Serial.println("AT+CSQ");
   updateSerial();
   MOD_SIM800L.println("AT+CCID"); //Read SIM information to confirm whether the SIM is plugged
+  Serial.println("AT+CCID");
   updateSerial();
   MOD_SIM800L.println("AT+CREG?"); //Check whether it has registered in the network
+  Serial.println("AT+CREG");
   updateSerial();
   MOD_SIM800L.println("AT+CMGF=1"); // Configuring TEXT mode
+  Serial.println("AT+CMGF=1");
   updateSerial();
   MOD_SIM800L.println("AT+CNMI=1,2,0,0,0"); // Decides how newly arrived SMS messages should be handled
+  Serial.println("AT+CNMI");
   updateSerial();
   Enviar_msj(Numero_cliente, "tamo ready");
   delay(1000);
@@ -154,27 +149,27 @@ void Enviar_msj(String numero, String msj)
   Serial.println("Mensaje enviado");
 }
 
-void get_am2302(){
-  if (am2302_tick == int(1000 / DELAY_LOOP)){
-    // This enters each 5s
-    am2302_tick = 0;
-    // auto status = am2302.read();
+// void get_am2302(){
+//   if (am2302_tick == int(1000 / DELAY_LOOP)){
+//     // This enters each 5s
+//     am2302_tick = 0;
+//     // auto status = am2302.read();
 
-    // temperature_status = "Temperature: ";
-    // temperature_status += am2302.get_Temperature();
-    // temperature_status += "\r\n";
-    // temperature_status += "Humidity: ";
-    // temperature_status += am2302.get_Humidity();
-    // temperature_status += "\r\n";
+//     // temperature_status = "Temperature: ";
+//     // temperature_status += am2302.get_Temperature();
+//     // temperature_status += "\r\n";
+//     // temperature_status += "Humidity: ";
+//     // temperature_status += am2302.get_Humidity();
+//     // temperature_status += "\r\n";
 
-    // // Light sensor
-    // light_valor = analogRead(pinSensor); 
-    // temperature_status += "Light: " + (String) light_valor;
-  }
-  else {
-    am2302_tick++;
-  }
-}
+//     // // Light sensor
+//     // light_valor = analogRead(pinSensor); 
+//     // temperature_status += "Light: " + (String) light_valor;
+//   }
+//   else {
+//     am2302_tick++;
+//   }
+// }
 
 void check_sr501(){
   val = digitalRead(inputPin);  // read input value
@@ -206,17 +201,22 @@ void check_sr501(){
 void updateSerial()
 {
   delay(500);
-  while (Serial.available()){
-    MOD_SIM800L.write(Serial.read());//Forward what Serial received to Software Serial Port
-  }
+  // while (Serial.available()){
+  //   MOD_SIM800L.write(Serial.read());//Forward what Serial received to Software Serial Port
+  // }
   String whole_msg = "";
   while(MOD_SIM800L.available()){
     char msj = MOD_SIM800L.read();
     Serial.write(msj);//Forward what Software Serial received to Serial Port
     whole_msg += msj;
   }
-  if(whole_msg != "")
+  if(whole_msg != ""){
+    if(whole_msg.indexOf("ERR") > 0){
+      Serial.print("ERROR");//Forward what Software Serial received to Serial Port
+      Serial.print(whole_msg);//Forward what Software Serial received to Serial Port
+    }
     analyse_msj(whole_msg);
+  }
 }
 
 void analyse_msj(String msj){
@@ -291,7 +291,7 @@ void loop() {
   }
   loop_n++;
 
-  get_am2302();
+  // get_am2302();
   check_sr501();
 
   updateSerial();

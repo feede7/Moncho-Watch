@@ -88,6 +88,11 @@ void setup()
   pinMode(LED_BUILTIN, OUTPUT); // D13
   digitalWrite(LED_BUILTIN, LOW);  // turn the LED on (HIGH is the voltage level)
 
+  for(int i=0; i < 10; i++){
+    delay(500);
+    digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));  // turn the LED on (HIGH is the voltage level)
+  }
+
   // SIM800L.begin(115200);       // Inicializamos el puerto serie BT (Para Modo AT 2)
   Serial.begin(9600);   // Inicializamos  el puerto serie
   Serial.print("Sketch:   ");   Serial.println(__FILE__);

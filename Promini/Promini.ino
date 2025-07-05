@@ -83,53 +83,6 @@ void select_answer(String number, String message) {
   Enviar_msj(Numero_cliente, a_time);
 }
 
-void setup()
-{
-  pinMode(LED_BUILTIN, OUTPUT); // D13
-  digitalWrite(LED_BUILTIN, LOW);  // turn the LED on (HIGH is the voltage level)
-
-  for(int i=0; i < 10; i++){
-    delay(500);
-    digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));  // turn the LED on (HIGH is the voltage level)
-  }
-
-  // SIM800L.begin(115200);       // Inicializamos el puerto serie BT (Para Modo AT 2)
-  Serial.begin(9600);   // Inicializamos  el puerto serie
-  Serial.print("Sketch:   ");   Serial.println(__FILE__);
-
-  // When power is supplied to sensor, don't send any instruction to the sensor within one second to pass unstable status
-  delay(1000);
-
-  // AutoBauding -> 1200, 2400, 4800, 9600, 19200, 38400, 57600
-  // MOD_SIM800L.begin(115200);
-  MOD_SIM800L.begin(57600);
-  // MOD_SIM800L.begin(38400);
-  // MOD_SIM800L.begin(9600);
-  Serial.println("Initializing...");
-  delay(1000);
-
-  MOD_SIM800L.println("AT"); //Once the handshake test is successful, it will back to OK
-  Serial.println("AT");
-  updateSerial();
-  MOD_SIM800L.println("AT+CSQ"); //Signal quality test, value range is 0-31 , 31 is the best
-  Serial.println("AT+CSQ");
-  updateSerial();
-  MOD_SIM800L.println("AT+CCID"); //Read SIM information to confirm whether the SIM is plugged
-  Serial.println("AT+CCID");
-  updateSerial();
-  MOD_SIM800L.println("AT+CREG?"); //Check whether it has registered in the network
-  Serial.println("AT+CREG");
-  updateSerial();
-  MOD_SIM800L.println("AT+CMGF=1"); // Configuring TEXT mode
-  Serial.println("AT+CMGF=1");
-  updateSerial();
-  MOD_SIM800L.println("AT+CNMI=1,2,0,0,0"); // Decides how newly arrived SMS messages should be handled
-  Serial.println("AT+CNMI");
-  updateSerial();
-  Enviar_msj(Numero_cliente, "tamo ready");
-  delay(1000);
-}
-
 void Enviar_msj(String numero, String msj)
 {
   //Se establece el formato de SMS en ASCII
@@ -153,28 +106,6 @@ void Enviar_msj(String numero, String msj)
   delay(1000);
   Serial.println("Mensaje enviado");
 }
-
-// void get_am2302(){
-//   if (am2302_tick == int(1000 / DELAY_LOOP)){
-//     // This enters each 5s
-//     am2302_tick = 0;
-//     // auto status = am2302.read();
-
-//     // temperature_status = "Temperature: ";
-//     // temperature_status += am2302.get_Temperature();
-//     // temperature_status += "\r\n";
-//     // temperature_status += "Humidity: ";
-//     // temperature_status += am2302.get_Humidity();
-//     // temperature_status += "\r\n";
-
-//     // // Light sensor
-//     // light_valor = analogRead(pinSensor); 
-//     // temperature_status += "Light: " + (String) light_valor;
-//   }
-//   else {
-//     am2302_tick++;
-//   }
-// }
 
 void check_sr501(){
   val = digitalRead(inputPin);  // read input value
@@ -286,6 +217,75 @@ void analyse_msj(String msj){
     }
   }
 }
+
+void setup()
+{
+  pinMode(LED_BUILTIN, OUTPUT); // D13
+  digitalWrite(LED_BUILTIN, LOW);  // turn the LED on (HIGH is the voltage level)
+
+  for(int i=0; i < 20; i++){
+    delay(500);
+    digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));  // turn the LED on (HIGH is the voltage level)
+  }
+
+  // SIM800L.begin(115200);       // Inicializamos el puerto serie BT (Para Modo AT 2)
+  Serial.begin(9600);   // Inicializamos  el puerto serie
+  Serial.print("Sketch:   ");   Serial.println(__FILE__);
+
+  // When power is supplied to sensor, don't send any instruction to the sensor within one second to pass unstable status
+  delay(1000);
+
+  // AutoBauding -> 1200, 2400, 4800, 9600, 19200, 38400, 57600
+  // MOD_SIM800L.begin(115200);
+  MOD_SIM800L.begin(57600);
+  // MOD_SIM800L.begin(38400);
+  // MOD_SIM800L.begin(9600);
+  Serial.println("Initializing...");
+  delay(1000);
+
+  MOD_SIM800L.println("AT"); //Once the handshake test is successful, it will back to OK
+  Serial.println("AT");
+  updateSerial();
+  MOD_SIM800L.println("AT+CSQ"); //Signal quality test, value range is 0-31 , 31 is the best
+  Serial.println("AT+CSQ");
+  updateSerial();
+  MOD_SIM800L.println("AT+CCID"); //Read SIM information to confirm whether the SIM is plugged
+  Serial.println("AT+CCID");
+  updateSerial();
+  MOD_SIM800L.println("AT+CREG?"); //Check whether it has registered in the network
+  Serial.println("AT+CREG");
+  updateSerial();
+  MOD_SIM800L.println("AT+CMGF=1"); // Configuring TEXT mode
+  Serial.println("AT+CMGF=1");
+  updateSerial();
+  MOD_SIM800L.println("AT+CNMI=1,2,0,0,0"); // Decides how newly arrived SMS messages should be handled
+  Serial.println("AT+CNMI");
+  updateSerial();
+  Enviar_msj(Numero_cliente, "tamo ready");
+  delay(1000);
+}
+
+// void get_am2302(){
+//   if (am2302_tick == int(1000 / DELAY_LOOP)){
+//     // This enters each 5s
+//     am2302_tick = 0;
+//     // auto status = am2302.read();
+
+//     // temperature_status = "Temperature: ";
+//     // temperature_status += am2302.get_Temperature();
+//     // temperature_status += "\r\n";
+//     // temperature_status += "Humidity: ";
+//     // temperature_status += am2302.get_Humidity();
+//     // temperature_status += "\r\n";
+
+//     // // Light sensor
+//     // light_valor = analogRead(pinSensor); 
+//     // temperature_status += "Light: " + (String) light_valor;
+//   }
+//   else {
+//     am2302_tick++;
+//   }
+// }
 
 void loop() {
   // put your main code here, to run repeatedly:
